@@ -1,32 +1,39 @@
-import { QuickUnion } from "../quickUnion"
+import { QuickUnion } from "./quickUnion"
 
 class Percolation {
     callQuickUnion: QuickUnion
-    sets: string[] = []
+    randomizer: number
+    countOpen: number
+    grid: number[][]
+    itPercolates: number
 
     constructor(n: number) {
+        this.grid = []
+        this.itPercolates = 0
+        this.countOpen = 0
+        this.randomizer = Math.floor(Math.random() * 3)
         this.callQuickUnion = new QuickUnion()
         if (n <= 0) {
             console.log('enter a number not starting at 0 or less')
         } else {
             for (let i = 0; i < n; i++) {
-                this.sets.push("0")
+                let row: number[] = []
+                for (let m = 0; m < n; m++) {
+                    row.push(0); // Add a zero to the row
+                }
+                this.grid.push(row); // Push the entire row into sets
             }
         }
     }
-    open(row: number, col: number) {
-        //determine the criteria for full and empty open site. /
-        //A full site is an open site that can be connected to an open site in the
-        // top row via a chain of neighboring (left, right, up, down) open sites
-        //when a full open site is created, it can affect other connecting sites
-        //most likely use quickunion para sa diri na scenario
-        //check adjacent if its 1 or 0, if 1, ma connect, if 0, nothing happens.
-        //if closed = 0, and if empty open site = 1, full open site = 2
-        //how to determine the system stops at the last border.
-        //research weighted quick union
 
-        
-    }
+    open(row: number, col: number) {
+        if (this.randomizer === 1) {
+            this.callQuickUnion.union(row, col)
+        } else if (this.randomizer === 2) {
+            this.callQuickUnion.union(row, col)
+        }
+    } //does not work
+
     isOpen(row: number, col: number): boolean {
         if (this.callQuickUnion.connected(row, col)) {
             //if the specified place is open, then its true
@@ -37,17 +44,28 @@ class Percolation {
 
     }
     isFull(row: number, col: number): boolean {
+        if (this.callQuickUnion.connected(row, col)) {
+            return true
+        } else {
+            return false
+        }
 
     }
 
 
     numberOfOpenSites(): number {
-        return 0
+        for (let i = 0; i < this.grid.length; i++) {
+            // if (this.grid[i] === 1 && this.grid[i] === 2) {
+            //     this.countOpen++
+            // }
+
+        }
+        return this.countOpen
     }
 
 
     percolates(): boolean {
-        if (p === 0) {
+        if (this.itPercolates === 0) {
             return false
         } else {
             return true
@@ -55,3 +73,6 @@ class Percolation {
 
     }
 }
+
+let newGrid = new Percolation(20)
+console.log(newGrid.grid)
