@@ -1,14 +1,12 @@
-import { QuickUnion } from "./quickUnion"
-
 class Percolation {
     callQuickUnion: QuickUnion
     randomizer: number
     countOpen: number
-    grid: number[][]
+    static grid: number[][]
     itPercolates: number
 
     constructor(n: number) {
-        this.grid = []
+        Percolation.grid = []
         this.itPercolates = 0
         this.countOpen = 0
         this.randomizer = Math.floor(Math.random() * 3)
@@ -17,25 +15,18 @@ class Percolation {
             console.log('enter a number not starting at 0 or less')
         } else {
             for (let i = 0; i < n; i++) {
-                let row: number[] = []
-                for (let m = 0; m < n; m++) {
-                    row.push(0); // Add a zero to the row
-                }
-                this.grid.push(row); // Push the entire row into sets
+                Percolation.grid.push(Array(n).fill(0));
             }
         }
     }
 
     open(row: number, col: number) {
-        if (this.randomizer === 1) {
-            this.callQuickUnion.union(row, col)
-        } else if (this.randomizer === 2) {
-            this.callQuickUnion.union(row, col)
-        }
+       this.callQuickUnion.union(row, col)
+        
     } //does not work
 
     isOpen(row: number, col: number): boolean {
-        if (this.callQuickUnion.connected(row, col)) {
+        if (Percolation.grid[row][col] === 1) {
             //if the specified place is open, then its true
             return true
         } else {
@@ -52,10 +43,9 @@ class Percolation {
 
     }
 
-
     numberOfOpenSites(): number {
-        for (let i = 0; i < this.grid.length; i++) {
-            // if (this.grid[i] === 1 && this.grid[i] === 2) {
+        for (let i = 0; i < Percolation.grid.length; i++) {
+            // if (Percolation.grid[i] === 1 && Percolation.grid[i] === 2) {
             //     this.countOpen++
             // }
 
@@ -70,9 +60,53 @@ class Percolation {
         } else {
             return true
         }
+    }
 
+    displayGrid() {
+        for (let i = 0; i < Percolation.grid.length; i++) {
+            console.log(Percolation.grid[i].join(' '));
+        }
     }
 }
 
-let newGrid = new Percolation(20)
-console.log(newGrid.grid)
+
+class QuickUnion {
+    id: number[][]
+
+    constructor() {
+        this.id = Percolation.grid
+    }
+
+    public quickUnion(n: number) {
+        for (let i = 0; i < n; i++) {
+            this.id.push([i])
+        }
+    }
+
+    public root(i: number): number {
+        for (let i = 0; i < this.id.length; i++) {
+            while (i != this.id[i][i]) {
+                [i] = this.id[i]
+            }
+        }
+        return i
+    }
+
+    public connected(p: number, q: number) {
+        if (this.root(p) === this.root(q)) {
+            return true
+        } else {
+            return false
+        }
+    }
+
+    public union(s: number, v: number) {
+        let i: number = this.root(s)
+        let j = this.root(v)
+        this.id[i][i] = j
+    }
+}
+let newGrid = new Percolation(5)
+newGrid.open(0,0)
+
+console.log(newGrid.displayGrid())
