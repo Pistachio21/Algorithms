@@ -28,8 +28,10 @@ class Grid {
         return this.grid
     }
 
-    randomOpensite():void{
-        const row = Math.floor(Math.random())
+    randomOpenSite(): void {
+        const row = Math.floor(Math.random() * this.size);
+        const col = Math.floor(Math.random() * this.size);
+        this.openSite(row, col);
     }
 }
 
