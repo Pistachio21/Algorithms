@@ -1,18 +1,24 @@
 class Percolation {
-    callQuickUnion: QuickUnion
+    callQuickUnion: WeightedQuickUnion
     randomizer: number
     countOpen: number
     static grid: number[][]
     itPercolates: number
+    topSite : number
+    bottomSite: number
+    n: number
 
     constructor(n: number) {
+        this.n = n
         Percolation.grid = []
         this.itPercolates = 0
         this.countOpen = 0
+        this.topSite = n * n
+        this.bottomSite = n * n + 1
         this.randomizer = Math.floor(Math.random() * 3)
-        this.callQuickUnion = new QuickUnion()
+        this.callQuickUnion = new WeightedQuickUnion()
         if (n <= 0) {
-            console.log('enter a number not starting at 0 or less')
+            throw new Error('enter a number not starting at 0 or less')
         } else {
             for (let i = 0; i < n; i++) {
                 Percolation.grid.push(Array(n).fill(0));
@@ -21,11 +27,18 @@ class Percolation {
     }
 
     open(row: number, col: number) {
-       this.callQuickUnion.union(row, col)
-        
-    } //does not work
+        if (row >= this.n || col > this.n || row < 0 || col < 0) {
+            throw new Error('enter a number not starting at 0 or less')
+        }
+        if (Percolation.grid[row][col] === 0) {
+            this.callQuickUnion.union(row, col)
+        }  
+    }
 
     isOpen(row: number, col: number): boolean {
+        if (row >= this.n || col > this.n || row < 0 || col < 0) {
+            throw new Error('enter a number not starting at 0 or less')
+        }
         if (Percolation.grid[row][col] === 1) {
             //if the specified place is open, then its true
             return true
@@ -35,31 +48,30 @@ class Percolation {
 
     }
     isFull(row: number, col: number): boolean {
-        if (this.callQuickUnion.connected(row, col)) {
-            return true
-        } else {
-            return false
+        if (row >= this.n || col > this.n || row < 0 || col < 0) {
+            throw new Error('enter a number not starting at 0 or less')
         }
-
+        let connectBottomSite = row * this.n + col
+        return this.callQuickUnion.connected(this.topSite, connectBottomSite)
     }
 
     numberOfOpenSites(): number {
         for (let i = 0; i < Percolation.grid.length; i++) {
-            // if (Percolation.grid[i] === 1 && Percolation.grid[i] === 2) {
-            //     this.countOpen++
-            // }
-
+            if (Percolation.grid[i][i] === 1 || Percolation.grid[i][i] === 2) {
+                this.countOpen++
+            }
         }
         return this.countOpen
     }
 
 
     percolates(): boolean {
-        if (this.itPercolates === 0) {
-            return false
-        } else {
-            return true
+        for (let col = 1; col <= this.n; col++) {
+            if (this.isFull(this.n, col)) {
+                return true;
+            }
         }
+        return false;
     }
 
     displayGrid() {
@@ -67,27 +79,33 @@ class Percolation {
             console.log(Percolation.grid[i].join(' '));
         }
     }
+
+    randomOpenSite(): void {
+        const row = Math.floor(Math.random() * this.n);
+        const col = Math.floor(Math.random() * this.n);
+        this.open(row, col)
+    }
 }
 
-
-class QuickUnion {
-    id: number[][]
+class WeightedQuickUnion {
+    id: number[]
+    sz: number[]
 
     constructor() {
-        this.id = Percolation.grid
+        this.id = []
+        this.sz = []
     }
 
     public quickUnion(n: number) {
         for (let i = 0; i < n; i++) {
-            this.id.push([i])
+            this.id.push(i)
+            this.sz.push(1)
         }
     }
 
     public root(i: number): number {
-        for (let i = 0; i < this.id.length; i++) {
-            while (i != this.id[i][i]) {
-                [i] = this.id[i]
-            }
+        while (i !== this.id[i]) {
+            i = this.id[i]
         }
         return i
     }
@@ -103,10 +121,19 @@ class QuickUnion {
     public union(s: number, v: number) {
         let i: number = this.root(s)
         let j = this.root(v)
-        this.id[i][i] = j
+
+        if (i === j) return;
+
+        if (this.sz[i] < this.sz[j]) {
+            this.id[i] = j;
+            this.sz[j] += this.sz[i];
+        }
+        else {
+            this.id[j] = i;
+            this.sz[i] += this.sz[j];
+        }
     }
 }
 let newGrid = new Percolation(5)
-newGrid.open(0,0)
-
+console.log(newGrid.randomOpenSite())
 console.log(newGrid.displayGrid())
