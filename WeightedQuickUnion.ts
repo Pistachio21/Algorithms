@@ -20,24 +20,20 @@ export default class WeightedQuickUnion {
     }
     
     public connected(p: number, q: number) {
-        if (this.root(p) === this.root(q)) {
-            return true
-        } else {
-            return false
-        }
+        return this.root(p) === this.root(q)
     }
 
     public union(s: number, v: number) {
         s = Math.abs(s);
         v = Math.abs(v);
         if (s >= this.id.length || v >= this.id.length) {
-            throw new Error('Invalid indices.');
+            throw new Error('Invalid values.');
         }
     
         let i: number = this.root(s);
         let j: number = this.root(v);
     
-        if (i === j) return; // Components are already connected
+        if (i === j) return;
     
         if (this.sz[i] < this.sz[j]) {
             this.id[i] = j;

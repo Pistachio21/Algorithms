@@ -6,7 +6,7 @@ export default class Percolation {
     topSite: number
     bottomSite: number
     n: number
-    gridLength : number
+    gridLength: number
 
     constructor(n: number) {
         if (n <= 0) {
@@ -14,7 +14,7 @@ export default class Percolation {
         }
         this.gridLength = n
         this.n = n
-        this.grid = Array.from({length: n}, () => Array(n).fill(0));
+        this.grid = Array.from({ length: n }, () => Array(n).fill(0));
         this.countOpen = 0
         this.topSite = n * n
         this.bottomSite = n * n + 1
@@ -22,40 +22,34 @@ export default class Percolation {
         for (let i = 0; i < n; i++) {
             this.callQuickUnion.union(this.index(0, i), this.topSite)
             this.callQuickUnion.union(this.index(n - 1, i), this.bottomSite)
-        }
-        this.inspectVirtualSiteConnections()
-    }
-    
-    inspectVirtualSiteConnections() {
-        for (let row = 0; row < this.n; row++) {
-             this.callQuickUnion.connected(this.topSite, this.index(row, 0));
-            this.callQuickUnion.connected(this.bottomSite, this.index(row, 0));
+            this.callQuickUnion.connected(this.topSite, this.index(i, 0));
+            this.callQuickUnion.connected(this.bottomSite, this.index(i, 0));
         }
     }
-    
+
     index(row: number, col: number) {
         return this.gridLength * row + col;
-    }   
+    }
 
     open(row: number, col: number) {
         if (row < 0 || col < 0 || row >= this.gridLength || col >= this.gridLength) {
-            throw new Error('Invalid row or column indices.');
+            throw new Error('Invalid row or column number.');
         }
-    
+
         if (this.grid[row][col] === 1) {
-            return; 
+            return;
         }
-    
+
         this.grid[row][col] = 1;
         this.countOpen++;
-    
+
         if (row === 0) {
             this.callQuickUnion.union(this.index(row, col), this.topSite);
         }
         if (row === this.gridLength - 1) {
             this.callQuickUnion.union(this.index(row, col), this.bottomSite);
         }
-    
+
         if (row > 0 && this.isOpen(row - 1, col)) {
             this.callQuickUnion.union(this.index(row, col), this.index(row - 1, col));
         }
@@ -69,19 +63,17 @@ export default class Percolation {
             this.callQuickUnion.union(this.index(row, col), this.index(row, col + 1));
         }
     }
-    
 
     isOpen(row: number, col: number): boolean {
-        if (row >= this.gridLength || col >= this.gridLength || row < 0 || col < 0) {
-            return false;
+        if (row > this.n || col > this.n || row < 0 || col < 0) {
+            throw new Error('Invalid row or column number.')
         }
-    
         return this.grid[row][col] === 1;
     }
 
     isFull(row: number, col: number): boolean {
         if (row > this.n || col > this.n || row < 0 || col < 0) {
-            throw new Error('enter a number not starting at 0 or less')
+            throw new Error('Invalid row or column number.')
         }
         let connectBottomSite = row * this.n + col
         return this.callQuickUnion.connected(this.topSite, connectBottomSite)
@@ -102,7 +94,7 @@ export default class Percolation {
     percolates(): boolean {
         return this.callQuickUnion.connected(this.topSite, this.bottomSite)
     }
-    
+
     displayGrid() {
         for (let i = 0; i < this.grid.length; i++) {
             console.log(this.grid[i].join(' '));
@@ -110,7 +102,6 @@ export default class Percolation {
     }
 
     randomOpenSite(): void {
-        console.log('Attempting to open a random site...');
         let row: number;
         let col: number;
 

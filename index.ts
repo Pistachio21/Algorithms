@@ -7,4 +7,4 @@ let getTrials = Number(readlineSync.questionInt('Enter a number for the number o
 let newStatistics = new PercolationStats(getN, getTrials)
 console.log('Mean:' + newStatistics.mean())
 console.log('Standard Deviation: ' + newStatistics.stddev())
-console.log(newStatistics.confidenceHi() + ',' + newStatistics.confidenceLo())
+console.log( '95% Confidence: ' + newStatistics.confidenceLo() + ',' + newStatistics.confidenceHi())
