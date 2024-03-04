@@ -143,16 +143,36 @@ let sketch = function (p) {
   }
 
   class FastCollinearPoints {
+    gap : number
+    points: Point[]
+    collectionLineSegments : number
     constructor(points: Point[]) {
-      // YOUR CODE HERE
+      this.points = points
+      while (this.gap < this.points.length / 3) {
+        this.gap = 3 * this.gap + 1
+      }
     }
 
     numberOfSegments(): number {
-      // YOUR CODE HERE
+      let count = 0
+      for (let i = 0; i < this.points.length; i++) {
+        count++
+      }
+      return count
     }
 
     segments(): LineSegment[] {
-      // YOUR CODE HERE
+      for (let i = 1; i < this.gap; i++) {
+        let current = this.gap[i]
+        let j = i - 1;
+        let slope = (this.points[p].y - this.points[j].y) / (this.points[p].x - this.points[j].x)
+        while ((j > -1) && (current < inputArr[j])) {
+            inputArr[j + 1] = inputArr[j];
+            j--;
+        }
+        inputArr[j + 1] = current;
+    }
+    return inputArr;
     }
   }
 
