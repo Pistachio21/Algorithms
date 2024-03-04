@@ -100,8 +100,16 @@ let sketch = function (p) {
     collectionLineSegments : LineSegment[]
     constructor(points: Point[]) {
       this.points = points
-      this.collectionLineSegments = []
-    }
+      for (let i = 0; i < this.points.length; i++) {
+        for (let j = i + 1; j < this.points.length; j++) {
+          if (points[i] !== null || this.points[i].x === this.points[j].x && 
+            this.points[i].y === this.points[j].y) {
+            this.collectionLineSegments = []
+            this.countSegments = 0
+          }
+        }
+      }
+  }
 
     numberOfSegments(): number {
       let count = 0
@@ -112,24 +120,25 @@ let sketch = function (p) {
     }
 
     segments(): LineSegment[] {
-      for (let p = 0; p < points.length; p++) {
-        for (let q = p + 1; q < points.length; q++) {
-          for (let r = q + 1; r < points.length; r++) {
-            for (let s = r + 1; s < points.length; s++) {
-              let slope1 = (points[p].y - points[q].y) / (points[p].x - points[q].x)
-              let slope2 = (points[p].y - points[r].y) / (points[p].x - points[r].x)
-              let slope3 = (points[p].y - points[s].y) / (points[p].x - points[s].x)
+      for (let p = 0; p < this.points.length; p++) {
+        for (let q = p + 1; q < this.points.length; q++) {
+          for (let r = q + 1; r < this.points.length; r++) {
+            for (let s = r + 1; s < this.points.length; s++) {
+              let slope1 = (this.points[p].y - this.points[q].y) / (this.points[p].x - this.points[q].x)
+              let slope2 = (this.points[p].y - this.points[r].y) / (this.points[p].x - this.points[r].x)
+              let slope3 = (this.points[p].y - this.points[s].y) / (this.points[p].x - this.points[s].x)
 
               if (slope1 === slope2 && slope2 === slope3) {
-                let connect = new LineSegment(points[p], points[s])
-                if ()
-                this.collectionLineSegments.push(connect)
-              }//refactor the code from phind
+                let connect = new LineSegment(this.points[p], this.points[s])
+                if (!this.collectionLineSegments.includes(connect)) {
+                  this.collectionLineSegments.push(connect)
+                }
+              }
             }
           }
         }
       }
-    
+    return this.collectionLineSegments
     }
   }
 
@@ -175,12 +184,18 @@ let sketch = function (p) {
       point.draw();
     }
 
-    const collinear = new FastCollinearPoints(points);
-    for (const segment of collinear.segments()) {
+    const brute = new BruteCollinearPoints(points)
+
+    for (const segment of brute.segments()) {
       console.log(segment.toString());
       segment.draw();
     }
   };
-};
 
+    // const collinear = new FastCollinearPoints(points);
+    // for (const segment of collinear.segments()) {
+    //   console.log(segment.toString());
+    //   segment.draw();
+    // }
+  };
 new p5(sketch);
