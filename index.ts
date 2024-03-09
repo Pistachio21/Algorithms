@@ -144,40 +144,57 @@ let sketch = function (p) {
     }
   }
 
-  // class FastCollinearPoints {
-  //   gap : number
-  //   points: Point[]
-  //   collectionLineSegments : number
-  //   constructor(points: Point[]) {
-  //     this.points = points
-  //     while (this.gap < this.points.length / 3) {
-  //       this.gap = 3 * this.gap + 1
-  //     }
-  //   }
+ class FastCollinearPoints {
+    sortedArray: LineSegment[]
+    points: Point[]
+    storeSlopes: number[]
+    collectionLineSegments: LineSegment[]
+    constructor(points: Point[]) {
+      this.points = points
+      this.sortedArray = []
+      this.storeSlopes = []
+      this.collectionLineSegments = []
+    }
 
-  //   numberOfSegments(): number {
-  //     let count = 0
-  //     for (let i = 0; i < this.points.length; i++) {
-  //       count++
-  //     }
-  //     return count
-  //   }
+    numberOfSegments(): number {
+      let count = 0
+      for (let i = 0; i < this.points.length; i++) {
+        count++
+      }
+      return count
+    }
 
-  //   segments(): LineSegment[] {
-  //     for (let i = 1; i < this.gap; i++) {
-  //       let current = this.gap[i]
-  //       let j = i - 1;
-  //       let slope = (this.points[p].y - this.points[j].y) / (this.points[p].x - this.points[j].x)
-  //       while ((j > -1) && (current < inputArr[j])) {
-  //           inputArr[j + 1] = inputArr[j];
-  //           j--;
-  //       }
-  //       inputArr[j + 1] = current;
-  //   }
-  //   return inputArr;
-  //   }
-  // }
-
+    segments(): LineSegment[] {
+      for (let p = 0; p < this.points.length; p++) {
+        const currentPoint = this.points[p]
+        for (let q = p; q < this.points.length; q++) {
+          const slope = currentPoint.slopeTo(this.points[q])
+          this.storeSlopes.push(slope);
+        }
+        let gap = Math.floor(this.storeSlopes.length / 2);
+        while (gap > 0) {
+            for (let i = gap; i < this.storeSlopes.length; i++) {
+                const temp = this.storeSlopes[i];
+                let j;
+                for (j = i; j >= gap && this.storeSlopes[j - gap] > temp; j -= gap) {
+                    this.storeSlopes[j] = this.storeSlopes[j - gap];
+                }
+                this.storeSlopes[j] = temp;
+            }
+            gap = Math.floor(gap / 2);
+        }
+        for (let i = 0; i < this.storeSlopes.length - 2; i++) {
+          if (this.storeSlopes[i] === this.storeSlopes[i + 1] && this.storeSlopes[i] === this.storeSlopes[i + 2]) {
+            const lines = new LineSegment(this.points[p], this.points[p + 1]);
+            this.collectionLineSegments.push(lines);
+            break;
+          }
+        }
+        this.storeSlopes = [];
+      }
+      return this.collectionLineSegments;
+    }
+  }
   // Declare your point objects here~
   // const point = new Point(19000, 10000);
   // const point2 = new Point(10000, 10000);
