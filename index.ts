@@ -91,7 +91,7 @@ let sketch = function (p) {
     toStrings(): string {
       // DO NOT MODIFY
 
-      return `${this.p.x} -> ${this.q.y}`
+      return `${this.p.x}, ${this.p.y} -> ${this.q.x}, ${this.q.y}`
     }
   }
 
@@ -100,19 +100,13 @@ let sketch = function (p) {
     countSegments: number
     collectionLineSegments: LineSegment[]
     constructor(points: Point[]) {
-      for (let i = 0; i < points.length; i++) {
-        if (this.points === null) {
-          throw Error('Error occurred')
-        } else {
-          this.points = points
-          for (let i = 0; i < this.points.length; i++) {
-            for (let j = i + 1; j < this.points.length; j++) {
-              if (points[i] !== null || this.points[i].x === this.points[j].x &&
-                this.points[i].y === this.points[j].y) {
-                this.collectionLineSegments = []
-                this.countSegments = 0
-              }
-            }
+      this.points = points
+      for (let i = 0; i < this.points.length; i++) {
+        for (let j = i + 1; j < this.points.length; j++) {
+          if (points[i] !== null || this.points[i].x === this.points[j].x &&
+            this.points[i].y === this.points[j].y) {
+            this.collectionLineSegments = []
+            this.countSegments = 0
           }
         }
       }
@@ -167,103 +161,106 @@ let sketch = function (p) {
     }
 
     segments(): LineSegment[] {
-      const n = this.points.length;
-      const slopes = new Map<number, Point[]>();
+      const sortedPoints = this.mergeSort(this.points.slice());
 
-      // Use mergeSort instead of the built-in sort
-      this.points = this.mergeSort(this.points);
-
-      for (let p = 0; p < n - 3; p++) {
-        const slope = this.points[p].slopeTo(this.points[0]);
-        const group = slopes.get(slope) || [];
-        group.push(this.points[p]);
-        slopes.set(slope, group);
-
-        for (let q = p + 1; q < n - 2; q++) {
-          const slope2 = this.points[q].slopeTo(this.points[0]);
-          if (slope === slope2) {
-            let min = p;
-            let max = q;
-            for (let r = q + 1; r < n; r++) {
-              const slope3 = this.points[r].slopeTo(this.points[0]);
-              if (slope === slope3) {
-                min = Math.min(min, r);
-                max = Math.max(max, r);
-              }
+      for (let i = 0; i < sortedPoints.length; i++) {
+        const referencePoint = sortedPoints[i];
+        const slopeArray: number[] = [];
+        for (let j = i + 1; j < sortedPoints.length; j++) {
+          const otherPoint = sortedPoints[j];
+          if (referencePoint.x === otherPoint.x) continue;
+          const slope = referencePoint.slopeTo(otherPoint);
+          let isDuplicate = false;
+          for (let k = 0; k < slopeArray.length; k++) {
+            if (slopeArray[k] === slope) {
+              isDuplicate = true;
+              break;
             }
-            if (min < max) {
-              this.sampleArray.push(new LineSegment(this.points[min], this.points[max]));
-            }
+          }
+          if (isDuplicate) {
+            this.sampleArray.push(new LineSegment(referencePoint, otherPoint));
+          } else {
+            slopeArray.push(slope);
           }
         }
       }
       return this.sampleArray;
-  }
 
-  merge(left: Point[], right: Point[]): Point[] {
-    let arr: Point[] = [];
-    while (left.length && right.length) {
-      if (left[0].slopeTo(this.points[0]) < right[0].slopeTo(this.points[0])) {
-        arr.push(left.shift() as Point);
-      } else {
-        arr.push(right.shift() as Point);
+    }
+
+    mergeSort(arr: Point[]): Point[] {
+      if (arr.length <= 1) return arr;
+
+      const mid = Math.floor(arr.length / 2);
+      const left = this.mergeSort(arr.slice(0, mid));
+      const right = this.mergeSort(arr.slice(mid));
+
+      return this.merge(left, right);
+    }
+
+
+    merge(left: Point[], right: Point[]): Point[] {
+      let result: Point[] = [];
+      let leftIndex = 0;
+      let rightIndex = 0;
+
+      while (leftIndex < left.length && rightIndex < right.length) {
+        if (left[leftIndex].x <= right[rightIndex].x) {
+          result.push(left[leftIndex++]);
+        } else {
+          result.push(right[rightIndex++]);
+        }
       }
+      result.push(...left.slice(leftIndex));
+      result.push(...right.slice(rightIndex));
+      return result;
     }
-    return [...arr, ...left, ...right];
+
   }
 
-  mergeSort(array: Point[]): Point[] {
-    const half = array.length / 2;
-    if (array.length < 2) {
-      return array;
+  // Declare your point objects here~
+  // const point = new Point(19000, 10000);
+  // const point2 = new Point(10000, 10000);
+
+  // from input6.txt
+  const points: Point[] = [
+    new Point(19000, 10000),
+    new Point(18000, 10000),
+    new Point(32000, 10000),
+    new Point(21000, 10000),
+    new Point(1234, 5678),
+    new Point(14000, 10000)
+  ];
+
+  p.draw = function () {
+    p.translate(padding, height - padding);
+    p.scale(1 / 100, -1 / 100);
+
+    // Call your draw and drawTo here.
+
+    // point.draw();
+    // point2.draw();
+    // point.drawTo(point2);
+
+    for (const point of points) {
+      point.draw();
     }
-    const left = array.splice(0, half);
-    return this.merge(this.mergeSort(left), this.mergeSort(array));
-  }
-}
 
-// Declare your point objects here~
-// const point = new Point(19000, 10000);
-// const point2 = new Point(10000, 10000);
+    const brute = new BruteCollinearPoints(points)
 
-// from input6.txt
-const points: Point[] = [
-  new Point(19000, 10000),
-  new Point(18000, 10000),
-  new Point(32000, 10000),
-  new Point(21000, 10000),
-  new Point(1234, 5678),
-  new Point(14000, 10000),
-];
-
-p.draw = function () {
-  p.translate(padding, height - padding);
-  p.scale(1 / 100, -1 / 100);
-
-  // Call your draw and drawTo here.
-
-  // point.draw();
-  // point2.draw();
-  // point.drawTo(point2);
-
-  for (const point of points) {
-    point.draw();
-  }
-
-  const brute = new BruteCollinearPoints(points)
-
-//   for (const segment of brute.segments()) {
-//     console.log(`Number of line segments: ${brute.numberOfSegments()}`)
-//     console.log(segment.toStrings());
-//     segment.draw();
-//   }
-// };
+    //   for (const segment of brute.segments()) {
+    //     console.log(`Number of line segments: ${brute.numberOfSegments()}`)
+    //     console.log(segment.toStrings());
+    //     segment.draw();
+    //   }
+    // };
 
     const collinear = new FastCollinearPoints(points);
     for (const segment of collinear.segments()) {
+      console.log(`Number of line segments: ${collinear.numberOfSegments()}`)
       console.log(segment.toStrings());
       segment.draw();
     }
   }
-  }
+}
 new p5(sketch);
