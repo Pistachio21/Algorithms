@@ -145,56 +145,61 @@ let sketch = function (p) {
   }
 
  class FastCollinearPoints {
-    sortedArray: LineSegment[]
-    points: Point[]
-    storeSlopes: number[]
-    collectionLineSegments: LineSegment[]
+    points: Point[];
+    sampleArray: LineSegment[];
+
     constructor(points: Point[]) {
-      this.points = points
-      this.sortedArray = []
-      this.storeSlopes = []
-      this.collectionLineSegments = []
+      for (let i = 0; i < points.length; i++) {
+        if (points === null) {
+          throw Error('Error detected.')
+        } else {
+        this.points = points;
+        this.sampleArray = [];
+        this.segments();
+        }
+      }
     }
 
     numberOfSegments(): number {
       let count = 0
-      for (let i = 0; i < this.points.length; i++) {
+      for (let i = 0; i < this.sampleArray.length; i++) {
         count++
       }
       return count
     }
 
     segments(): LineSegment[] {
-      for (let p = 0; p < this.points.length; p++) {
-        const currentPoint = this.points[p]
-        for (let q = p; q < this.points.length; q++) {
-          const slope = currentPoint.slopeTo(this.points[q])
-          this.storeSlopes.push(slope);
-        }
-        let gap = Math.floor(this.storeSlopes.length / 2);
-        while (gap > 0) {
-            for (let i = gap; i < this.storeSlopes.length; i++) {
-                const temp = this.storeSlopes[i];
-                let j;
-                for (j = i; j >= gap && this.storeSlopes[j - gap] > temp; j -= gap) {
-                    this.storeSlopes[j] = this.storeSlopes[j - gap];
-                }
-                this.storeSlopes[j] = temp;
+      const n = this.points.length;
+      const slopes = new Map<number, Point[]>();
+      this.points.sort((p, q) => p.slopeTo(this.points[0]) - q.slopeTo(this.points[0]));
+
+      for (let p = 0; p < n - 3; p++) {
+        const slope = this.points[p].slopeTo(this.points[0]);
+        const group = slopes.get(slope) || [];
+        group.push(this.points[p]);
+        slopes.set(slope, group);
+
+        for (let q = p + 1; q < n - 2; q++) {
+          const slope2 = this.points[q].slopeTo(this.points[0]);
+          if (slope === slope2) {
+            let min = p;
+            let max = q;
+            for (let r = q + 1; r < n; r++) {
+              const slope3 = this.points[r].slopeTo(this.points[0]);
+              if (slope === slope3) {
+                min = Math.min(min, r);
+                max = Math.max(max, r);
+              }
             }
-            gap = Math.floor(gap / 2);
-        }
-        for (let i = 0; i < this.storeSlopes.length - 2; i++) {
-          if (this.storeSlopes[i] === this.storeSlopes[i + 1] && this.storeSlopes[i] === this.storeSlopes[i + 2]) {
-            const lines = new LineSegment(this.points[p], this.points[p + 1]);
-            this.collectionLineSegments.push(lines);
-            break;
+            if (min < max) {
+              this.sampleArray.push(new LineSegment(this.points[min], this.points[max]));
+            }
           }
         }
-        this.storeSlopes = [];
       }
-      return this.collectionLineSegments;
+      return this.sampleArray
     }
-  }
+  }//thellll change it na 2 methods siya kay say ni chad need gid 2 methods para sa mergesort, refactor galing and mang bug testing ta
   // Declare your point objects here~
   // const point = new Point(19000, 10000);
   // const point2 = new Point(10000, 10000);
