@@ -95,54 +95,90 @@ let sketch = function (p) {
     }
   }
 
-  class BruteCollinearPoints {
-    points: Point[]
-    countSegments: number
-    collectionLineSegments: LineSegment[]
+class BruteCollinearPoints {
+    points: Point[];
+    countSegments: number;
+    collectionLineSegments: LineSegment[];
+  
     constructor(points: Point[]) {
-      this.points = points
-      for (let i = 0; i < this.points.length; i++) {
-        for (let j = i + 1; j < this.points.length; j++) {
-          if (points[i] !== null || this.points[i].x === this.points[j].x &&
-            this.points[i].y === this.points[j].y) {
-            this.collectionLineSegments = []
-            this.countSegments = 0
-          }
-        }
-      }
+      this.points = points;
+      this.countSegments = 0;
+      this.collectionLineSegments = [];
+      this.findLineSegments();
     }
-
-    numberOfSegments(): number {
-      return this.segments().length
-    }
-
-    segments(): LineSegment[] {
-      const segments: LineSegment[] = [];
+  
+     findLineSegments() {
       for (let p = 0; p < this.points.length; p++) {
         for (let q = p + 1; q < this.points.length; q++) {
           for (let r = q + 1; r < this.points.length; r++) {
             for (let s = r + 1; s < this.points.length; s++) {
-              let slope1 = (this.points[p].y - this.points[q].y) / (this.points[p].x - this.points[q].x)
-              let slope2 = (this.points[p].y - this.points[r].y) / (this.points[p].x - this.points[r].x)
-              let slope3 = (this.points[p].y - this.points[s].y) / (this.points[p].x - this.points[s].x)
-
-              if (Math.abs(slope1 - slope2) > 0 && Math.abs(slope2 - slope3) > 0) {
-                let connect = new LineSegment(this.points[p], this.points[s])
-                if (!segments.includes(connect)) {
-                  segments.push(connect)
+              let slope1 = this.calculateSlope(this.points[p], this.points[q]);
+              let slope2 = this.calculateSlope(this.points[p], this.points[r]);
+              let slope3 = this.calculateSlope(this.points[p], this.points[s]);
+  
+              if (this.areDistinctSlopes(slope1, slope2, slope3)) {
+                let segment = new LineSegment(this.points[p], this.points[s]);
+                if (!this.isSegmentAlreadyAdded(segment)) {
+                  this.collectionLineSegments.push(segment);
                 }
               }
             }
           }
         }
       }
-      return segments
+      this.countSegments = this.collectionLineSegments.length;
+    }
+  
+     calculateSlope(point1: Point, point2: Point): number {
+      return (point2.y - point1.y) / (point2.x - point1.x);
+    }
+  
+     areDistinctSlopes(slope1: number, slope2: number, slope3: number): boolean {
+      return Math.abs(slope1 - slope2) > 0 && Math.abs(slope2 - slope3) > 0;
+    }
+  
+     isSegmentAlreadyAdded(newSegment: LineSegment): boolean {
+      for (const segment of this.collectionLineSegments) {
+        if (
+          (segment.p.x === newSegment.p.x && segment.p.y === newSegment.p.y &&
+           segment.q.x === newSegment.q.x && segment.q.y === newSegment.q.y) ||
+          (segment.p.x === newSegment.q.x && segment.p.y === newSegment.q.y &&
+           segment.q.x === newSegment.p.x && segment.q.y === newSegment.p.y)
+        ) {
+          return true;
+        }
+      }
+      return false;
+    }
+  
+    numberOfSegments(): number {
+      return this.countSegments;
+    }
+  
+    segments(): LineSegment[] {
+      const uniqueSegments: LineSegment[] = [];
+      for (const segment of this.collectionLineSegments) {
+        let isDuplicate = false;
+        for (const uniqueSegment of uniqueSegments) {
+          if ((uniqueSegment.p.x === segment.p.x && uniqueSegment.p.y === segment.p.y &&
+               uniqueSegment.q.x === segment.q.x && uniqueSegment.q.y === segment.q.y) ||
+              (uniqueSegment.p.x === segment.q.x && uniqueSegment.p.y === segment.q.y &&
+               uniqueSegment.q.x === segment.p.x && uniqueSegment.q.y === segment.p.y)) {
+            isDuplicate = true;
+            break;
+          }
+        }
+        if (!isDuplicate) {
+          uniqueSegments.push(segment);
+        }
+      }
+      return uniqueSegments;
     }
   }
-
+  
   class FastCollinearPoints {
     points: Point[];
-    sampleArray: LineSegment[];
+    collectionLineSegments: LineSegment[];
 
     constructor(points: Point[]) {
       for (let i = 0; i < points.length; i++) {
@@ -150,54 +186,55 @@ let sketch = function (p) {
           throw Error('Error detected.')
         } else {
           this.points = points;
-          this.sampleArray = [];
+          this.collectionLineSegments = [];
           this.segments();
         }
       }
     }
 
     numberOfSegments(): number {
-      return this.sampleArray.length
+      return this.collectionLineSegments.length
     }
 
     segments(): LineSegment[] {
       const sortedPoints = this.mergeSort(this.points.slice());
-
       for (let i = 0; i < sortedPoints.length; i++) {
-        const referencePoint = sortedPoints[i];
-        const slopeArray: number[] = [];
-        for (let j = i + 1; j < sortedPoints.length; j++) {
-          const otherPoint = sortedPoints[j];
-          if (referencePoint.x === otherPoint.x) continue;
-          const slope = referencePoint.slopeTo(otherPoint);
-          let isDuplicate = false;
-          for (let k = 0; k < slopeArray.length; k++) {
-            if (slopeArray[k] === slope) {
-              isDuplicate = true;
-              break;
-            }
-          }
-          if (isDuplicate) {
-            this.sampleArray.push(new LineSegment(referencePoint, otherPoint));
-          } else {
-            slopeArray.push(slope);
-          }
-        }
+         let referencePoint = sortedPoints[i];
+         let slopeArray: number[] = [];
+         let collinearPoints: Point[] = [];
+     
+         for (let j = i + 1; j < sortedPoints.length; j++) {
+           let otherPoint = sortedPoints[j];
+           if (referencePoint.x === otherPoint.x) continue;
+           let slope = referencePoint.slopeTo(otherPoint);
+     
+           if (slopeArray.includes(slope)) {
+             collinearPoints.push(otherPoint);
+           } else {
+             slopeArray.push(slope);
+             collinearPoints = [referencePoint, otherPoint];
+           }
+         }
+         if (collinearPoints.length >= 3) {
+           for (let k = 0; k < collinearPoints.length - 1; k++) {
+             let segment = new LineSegment(collinearPoints[k], collinearPoints[k + 1]);
+             if (!this.isSegmentAlreadyAdded(segment)) {
+               this.collectionLineSegments.push(segment);
+             }
+           }
+         }
       }
-      return this.sampleArray;
-
-    }
-
+      return this.collectionLineSegments;
+     }
+     
     mergeSort(arr: Point[]): Point[] {
       if (arr.length <= 1) return arr;
-
-      const mid = Math.floor(arr.length / 2);
-      const left = this.mergeSort(arr.slice(0, mid));
-      const right = this.mergeSort(arr.slice(mid));
+      let mid = Math.floor(arr.length / 2);
+      let left = this.mergeSort(arr.slice(0, mid));
+      let right = this.mergeSort(arr.slice(mid));
 
       return this.merge(left, right);
     }
-
 
     merge(left: Point[], right: Point[]): Point[] {
       let result: Point[] = [];
@@ -215,7 +252,20 @@ let sketch = function (p) {
       result.push(...right.slice(rightIndex));
       return result;
     }
-
+  
+     isSegmentAlreadyAdded(newSegment: LineSegment): boolean {
+      for (const segment of this.collectionLineSegments) {
+        if (
+          (segment.p.x === newSegment.p.x && segment.p.y === newSegment.p.y &&
+           segment.q.x === newSegment.q.x && segment.q.y === newSegment.q.y) ||
+          (segment.p.x === newSegment.q.x && segment.p.y === newSegment.q.y &&
+           segment.q.x === newSegment.p.x && segment.q.y === newSegment.p.y)
+        ) {
+          return true;
+        }
+      }
+      return false;
+    }
   }
 
   // Declare your point objects here~
@@ -246,14 +296,13 @@ let sketch = function (p) {
       point.draw();
     }
 
-    const brute = new BruteCollinearPoints(points)
+    // const brute = new BruteCollinearPoints(points)
 
     //   for (const segment of brute.segments()) {
     //     console.log(`Number of line segments: ${brute.numberOfSegments()}`)
     //     console.log(segment.toStrings());
     //     segment.draw();
     //   }
-    // };
 
     const collinear = new FastCollinearPoints(points);
     for (const segment of collinear.segments()) {
